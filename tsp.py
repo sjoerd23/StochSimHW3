@@ -7,10 +7,6 @@ import numba
 import parser
 
 
-tot_distance_times = []
-tot_distance_sq_times = []
-
-## TODO: implement 2-opt. Temporary swap function
 def two_opt(nodes):
     """2 opt
 
@@ -120,10 +116,8 @@ def tot_distance(nodes):
             total distance between route in nodes
     """
     total = 0
-    time_start = time.time()
     for i in range(len(nodes)-1):
         total += distance(nodes[i], nodes[i+1])
-    tot_distance_times.append(time.time() - time_start)
 
     return total
 
