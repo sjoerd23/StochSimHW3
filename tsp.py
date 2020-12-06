@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
-import tqdm
 import time
 import numba
 import parser
@@ -183,45 +182,34 @@ def calc_dist_opt_tour(fname_opt_tour, fname_tsp):
     return min_dist
 
 
-def main():
+@numba.njit
+def simulated_annealing(nodes, markov_length, t0, t_min):
+    """Simulated annealing algorithm
 
-    fname_opt_tour = "data/eil51.opt.tour.txt"
-    fname_tsp = "data/eil51.tsp.txt"
-    # fname_opt_tour = "data/a280.opt.tour.txt"
-    # fname_tsp = "data/a280.tsp.txt"
-    # fname_opt_tour = "data/pcb442.opt.tour.txt"
-    # fname_tsp = "data/pcb442.tsp.txt"
+    Args:
+        nodes : np array
+             array of x and y coords of a given initial solution
+        markov_length : int
+             length of the markov chain
+        t0 : float
+            initial temperature
+        t_min : float
+            stopping condition for temperature
 
-    # variables to time parts of the program
-    time_start = time.time()
-
-    # set seed for np.random module
-    np.random.seed()
-
-    # calculate distance for given best solution (opt.tour.txt files)
-    optimal_distance = calc_dist_opt_tour(fname_opt_tour, fname_tsp)
-
-    # parse tsp.txt input file to nodes
-    nodes = parser.parse_file(fname_tsp, strip_node_num=True)
-
-    # create random initial solution
-    np.random.shuffle(nodes)
-    initial_distance = tot_distance(nodes)
-
-    # specify parameters for SA
-    markov_length = len(nodes)*5    # taken as len(nodes), can be adjusted to anything else
-    t_min = 1
-    t0 = 11
-
+    Returns:
+        nodes : np array
+             array of x and y coords of best solution
+    """
     t = t0
     curr_iter = 0
-    print_counter = 0
+    progress_counter = 0
 
-    # outer loop, decreasing temperature until stopping condition is reached
     while t > t_min:
-        if print_counter % 1000 == 0:
-            print("temperature: {:.4f}".format(t))
-        print_counter += 1
+
+        if progress_counter / 10000 == 1:
+            print("t: ", t)
+            progress_counter = 0
+        progress_counter += 1
 
         # inner loop, over the Markov chain
         for _ in range(markov_length):
@@ -248,7 +236,43 @@ def main():
         t = t_log(curr_iter, t0)
         curr_iter += 1
 
-    print("\nElapsed time: {:.2f}s".format(time.time() -time_start))
+    return nodes
+
+
+def main():
+
+    fname_opt_tour = "data/eil51.opt.tour.txt"
+    fname_tsp = "data/eil51.tsp.txt"
+    # fname_opt_tour = "data/a280.opt.tour.txt"
+    # fname_tsp = "data/a280.tsp.txt"
+    # fname_opt_tour = "data/pcb442.opt.tour.txt"
+    # fname_tsp = "data/pcb442.tsp.txt"
+
+    # variables to time parts of the program
+    time_start = time.time()
+
+    # set seed for np.random module
+    np.random.seed()
+
+    # calculate distance for given best solution (opt.tour.txt files)
+    optimal_distance = calc_dist_opt_tour(fname_opt_tour, fname_tsp)
+
+    # parse tsp.txt input file to nodes
+    nodes = parser.parse_file(fname_tsp, strip_node_num=True)
+
+    # create random initial solution
+    np.random.shuffle(nodes)
+    initial_distance = tot_distance(nodes)
+
+    # specify parameters for SA
+    markov_length = len(nodes)    # taken as len(nodes), can be adjusted to anything else
+    t_min = 32
+    t0 = 400
+
+    # perform simula annealing algorithm
+    nodes = simulated_annealing(nodes, markov_length, t0, t_min)
+
+    print("Elapsed time: {:.2f}s".format(time.time() -time_start))
 
     print("Minimum distance given solution: {:.2f}".format(optimal_distance))
     print("Initial distance: {:.2f}".format(initial_distance))
