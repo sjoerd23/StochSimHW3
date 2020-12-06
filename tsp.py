@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import time
+import tqdm
 import numba
 import parser
 
@@ -202,14 +203,14 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
     """
     t = t0
     curr_iter = 0
-    progress_counter = 0
+    # progress_counter = 0
 
     while t > t_min:
 
-        if progress_counter / 10000 == 1:
-            print("t: ", t)
-            progress_counter = 0
-        progress_counter += 1
+        # if progress_counter / 1000 == 1:
+        #     print("t: ", t)
+        #     progress_counter = 0
+        # progress_counter += 1
 
         # inner loop, over the Markov chain
         for _ in range(markov_length):
@@ -248,7 +249,6 @@ def main():
     # fname_opt_tour = "data/pcb442.opt.tour.txt"
     # fname_tsp = "data/pcb442.tsp.txt"
 
-    # variables to time parts of the program
     time_start = time.time()
 
     # set seed for np.random module
@@ -257,26 +257,35 @@ def main():
     # calculate distance for given best solution (opt.tour.txt files)
     optimal_distance = calc_dist_opt_tour(fname_opt_tour, fname_tsp)
 
-    # parse tsp.txt input file to nodes
+    # parse tsp.txt input file to nodes and create random initial solution
     nodes = parser.parse_file(fname_tsp, strip_node_num=True)
-
-    # create random initial solution
     np.random.shuffle(nodes)
     initial_distance = tot_distance(nodes)
 
     # specify parameters for SA
     markov_length = len(nodes)    # taken as len(nodes), can be adjusted to anything else
-    t_min = 32
-    t0 = 400
+    t_min = 0.8
+    t0 = 10
 
-    # perform simula annealing algorithm
-    nodes = simulated_annealing(nodes, markov_length, t0, t_min)
+    # perform simulated annealing algorithm for a number of runs
+    n_runs = 30                             # number of runs of SA algorithm
+    solns = []                              # list of best solutions per run
+    for i in tqdm.tqdm(range(n_runs)):
+        solns.append(simulated_annealing(nodes, markov_length, t0, t_min))
+
+    # calculate statistics
+    distances = [tot_distance(soln) for soln in solns]
+    shortest_distance = np.min(distances)
+    mean_distance = np.mean(distances)
+    sample_var_distance = np.std(distances, ddof=1)
+    confidence_interval = (1.96*sample_var_distance / np.sqrt(len(solns)))
 
     print("Elapsed time: {:.2f}s".format(time.time() -time_start))
 
     print("Minimum distance given solution: {:.2f}".format(optimal_distance))
     print("Initial distance: {:.2f}".format(initial_distance))
-    print("Minimum found distance: {:.2f}".format(tot_distance(nodes)))
+    print("Average found distance: {:.2f} +- {:.2f}".format(mean_distance, confidence_interval))
+    print("Minimum found distance: {:.2f}".format(shortest_distance))
 
     return
 
