@@ -21,11 +21,14 @@ def two_opt(nodes):
     """
 
     # randomly select 2-opt swap interval
-    i = np.random.randint(0, len(nodes)-2)
-    j = np.random.randint(i+1, len(nodes)-1)
+    i = np.random.randint(0, len(nodes)-1)
+    j = np.random.randint(0, len(nodes)-1)
 
     # peform 2 opt swap
-    nodes[i:j] = np.flipud(nodes[i:j])
+    if i <= j:
+        nodes[i:j] = np.flipud(nodes[i:j])
+    else:
+        nodes[j:i] = np.flipud(nodes[j:i])
 
     return nodes
 
@@ -268,7 +271,7 @@ def main():
     t0 = 10
 
     # perform simulated annealing algorithm for a number of runs
-    n_runs = 30                             # number of runs of SA algorithm
+    n_runs = 15                             # number of runs of SA algorithm
     solns = []                              # list of best solutions per run
     for i in tqdm.tqdm(range(n_runs)):
         solns.append(simulated_annealing(nodes, markov_length, t0, t_min))
