@@ -87,6 +87,7 @@ def p_boltzmann(nodes_tot_distance, nodes_cand_tot_distance, t):
         boltzmann_value : float
             value of the boltzmann distribution
     """
+    # print("%f",(nodes_cand_tot_distance - nodes_tot_distance))
     return np.exp(-(nodes_cand_tot_distance - nodes_tot_distance) / t)
 
 
@@ -164,6 +165,11 @@ def t_over_quadr(curr_iter, t0):
     return t0 / (1+a * curr_iter**2)
 
 
+@numba.jit
+def t_trigonometric(curr_iter, t0, tn, n):
+    return tn + 0.5*(t0 - tn)*(1+np.cos((curr_iter*np.pi)/n))
+
+
 def calc_dist_opt_tour(fname_opt_tour, fname_tsp):
     """Calculates distance of given optimal tour file (opt.tour.txt)
 
@@ -202,6 +208,8 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
 
     Returns:
         nodes : np array
+             array of x and y coords of final solution
+        nodes_shortest : np array
              array of x and y coords of best solution
     """
     t = t0
@@ -210,7 +218,7 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
 
     while t > t_min:
 
-        # if progress_counter / 1000 == 1:
+        # if progress_counter % 1000 == 0:
         #     print("t: ", t)
         #     progress_counter = 0
         # progress_counter += 1
@@ -237,7 +245,10 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
                     nodes = nodes_cand.copy()
 
         # calculate new temperature
-        t = t_log(curr_iter, t0)
+        # t = t_log(curr_iter, t0)
+        tn = t_min - 0.01
+        n = 50000
+        t = t_trigonometric(curr_iter, t0, tn, n)
         curr_iter += 1
 
     return nodes
@@ -247,10 +258,10 @@ def main():
 
     fname_opt_tour = "data/eil51.opt.tour.txt"
     fname_tsp = "data/eil51.tsp.txt"
-    # fname_opt_tour = "data/a280.opt.tour.txt"
-    # fname_tsp = "data/a280.tsp.txt"
-    # fname_opt_tour = "data/pcb442.opt.tour.txt"
-    # fname_tsp = "data/pcb442.tsp.txt"
+    fname_opt_tour = "data/a280.opt.tour.txt"
+    fname_tsp = "data/a280.tsp.txt"
+    fname_opt_tour = "data/pcb442.opt.tour.txt"
+    fname_tsp = "data/pcb442.tsp.txt"
 
     time_start = time.time()
 
@@ -260,21 +271,26 @@ def main():
     # calculate distance for given best solution (opt.tour.txt files)
     optimal_distance = calc_dist_opt_tour(fname_opt_tour, fname_tsp)
 
-    # parse tsp.txt input file to nodes and create random initial solution
+    # parse tsp.txt input file to nodes
     nodes = parser.parse_file(fname_tsp, strip_node_num=True)
-    np.random.shuffle(nodes)
-    initial_distance = tot_distance(nodes)
 
     # specify parameters for SA
-    markov_length = len(nodes)    # taken as len(nodes), can be adjusted to anything else
-    t_min = 0.8
-    t0 = 10
-
+    markov_length = len(nodes)//2    # taken as len(nodes), can be adjusted to anything else (seems like small is benificial)
+    t_min = 4.4
+    t0 = 50
+    
     # perform simulated annealing algorithm for a number of runs
-    n_runs = 15                             # number of runs of SA algorithm
-    solns = []                              # list of best solutions per run
+    n_runs = 10                            # number of runs of SA algorithm
+    solns = []                       # list of final solution per run
     for i in tqdm.tqdm(range(n_runs)):
-        solns.append(simulated_annealing(nodes, markov_length, t0, t_min))
+
+        # create random initial solution
+        np.random.shuffle(nodes)
+        initial_distance = tot_distance(nodes)
+
+        # perform simulated annealing
+        sa = simulated_annealing(nodes, markov_length, t0, t_min)
+        solns.append(sa)
 
     # calculate statistics
     distances = [tot_distance(soln) for soln in solns]
@@ -283,12 +299,12 @@ def main():
     sample_var_distance = np.std(distances, ddof=1)
     confidence_interval = (1.96*sample_var_distance / np.sqrt(len(solns)))
 
-    print("Elapsed time: {:.2f}s".format(time.time() -time_start))
-
     print("Minimum distance given solution: {:.2f}".format(optimal_distance))
     print("Initial distance: {:.2f}".format(initial_distance))
     print("Average found distance: {:.2f} +- {:.2f}".format(mean_distance, confidence_interval))
     print("Minimum found distance: {:.2f}".format(shortest_distance))
+
+    print("Elapsed time: {:.2f}s".format(time.time() -time_start))
 
     return
 
