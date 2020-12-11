@@ -57,8 +57,12 @@ def parse_sol_file(fname):
     data = []
     with open(fname) as f:
 
-        # read through file and strip first 5 header lines
-        for line in itertools.islice(f, 5, None):
+        # read through file and strip first header_length lines
+        if fname == "data/a280.opt.tour.txt":
+            header_length = 4
+        else:
+            header_length = 5
+        for line in itertools.islice(f, header_length, None):
 
             # if EOF reached, stop reading input
             if line.strip("\n") == "EOF" or line.strip("\n") == "-1":
@@ -99,5 +103,5 @@ def get_coords_opt_tour(fname_opt_tour, fname_tsp, strip_node_num=False):
             coords_opt_tour.append(nodes_tsp[index][1:])
         else:
             coords_opt_tour.append(nodes_tsp[index][:])
-            
+
     return np.array(coords_opt_tour)
