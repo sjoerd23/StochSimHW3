@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import time
-import sys
 import tqdm
 import numba
 import parser
@@ -162,7 +161,7 @@ def t_over_quadr(curr_iter, t0):
         t : float
             temperature
     """
-    a=0.0000000005
+    a=0.0000005
     return t0 / (1+a * curr_iter**2)
 
 
@@ -224,7 +223,7 @@ def calc_dist_opt_tour(fname_opt_tour, fname_tsp):
 
 
 @numba.njit
-def simulated_annealing(nodes, markov_length, t0, t_min):
+def simulated_annealing(nodes, markov_length, t0):
     """Simulated annealing algorithm
 
     Args:
@@ -234,27 +233,36 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
              length of the markov chain
         t0 : float
             initial temperature
-        t_min : float
-            stopping condition for temperature
 
     Returns:
         nodes : np array
              array of x and y coords of final solution
-        nodes_shortest : np array
-             array of x and y coords of best solution
     """
     t = t0
     curr_iter = 0
-    # progress_counter = 0
 
-    while t > t_min:
+    # stopping condition checks if the diffs in the mean of the distances of the last
+    # length_stop_cond solutions compared to the previous length_stop_cond solutions is higher
+    # than the threshold eps. If it gets below the threshold, the while loop terminates
+    # and the last route (nodes) is returned
+    length_stop_cond = 1000
+    eps = 0.001
+    distances = np.array([tot_distance(nodes) for _ in range(length_stop_cond)])
+    distances = np.concatenate((distances, np.array([tot_distance(nodes)*(1-2*eps) for _ in range(length_stop_cond)])))
 
-        # if progress_counter % 1000 == 0:
-        #     print("t: ", t)
-        #     progress_counter = 0
-        # progress_counter += 1
+    while (np.mean(distances[:length_stop_cond]) - np.mean(distances[-length_stop_cond:])) > eps:
 
-        # inner loop, ov    er the Markov chain
+        # if program takes too long: return
+        # this terminating value can be set higher if you want your programs to run longer
+        if curr_iter > 1e6:
+            print("While loop takes too long. Maybe adjust eps; return")
+            return nodes
+
+        # progress update
+        # if curr_iter % 1e4 == 0:
+        #     print(curr_iter)
+
+        # inner loop, over the Markov chain
         for _ in range(markov_length):
 
             # generate candidate solution using 2-opt
@@ -276,12 +284,15 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
                     nodes = nodes_cand.copy()
 
         # calculate new temperature
-        # t = t_log(curr_iter, t0)
-        tn = t_min - 0.01
-        n = 50000
-        t = t_trigonometric(curr_iter, t0, tn, n)
+        t = t_log(curr_iter, t0)
+        # t = t_over_quadr(curr_iter, t0)
+
+        # update list of distances for stopping condition
+        distances = np.append(distances[1:], tot_distance(nodes))
+
         curr_iter += 1
 
+    print("Stopping condition met: curr_iter:", curr_iter)
     return nodes
 
 
@@ -307,11 +318,10 @@ def main():
 
     # specify parameters for SA
     markov_length = len(nodes)    # taken as len(nodes), can be adjusted to anything else
-    t_min = 2.2
-    t0 = 21
+    t0 = 5
 
     # perform simulated annealing algorithm for a number of runs
-    n_runs = 10                           # number of runs of SA algorithm
+    n_runs = 15                         # number of runs of SA algorithm
     solns = []                       # list of final solution per run
     for i in tqdm.tqdm(range(n_runs)):
 
@@ -320,7 +330,7 @@ def main():
         initial_distance = tot_distance(nodes)
 
         # perform simulated annealing
-        sa = simulated_annealing(nodes, markov_length, t0, t_min)
+        sa = simulated_annealing(nodes, markov_length, t0)
         solns.append(sa)
 
     # save best solution
@@ -333,13 +343,10 @@ def main():
         fname_nodes_shortest = "results/nodes_shortest_{}_{:.2f}.txt".format(len(nodes_shortest), shortest_distance)
         np.savetxt(fname_nodes_shortest, nodes_shortest, fmt="%i")
 
-        # draw shortes calculated route
+        # draw shortes calculated and given route
         draw(nodes_shortest, title="Calculated shortest route")
-
-        # draw shortest given route
         draw(parser.get_coords_opt_tour(fname_opt_tour, fname_tsp, strip_node_num=False),
             title="Given shortest route")
-
 
     # calculate statistics
     mean_distance = np.mean(distances)
@@ -354,9 +361,9 @@ def main():
     print("Elapsed time: {:.2f}s".format(time.time() -time_start))
 
     # draw specified node solution
-    fname_tour = "results/nodes_shortest_51_438.48.txt"
-    tour = parser.parse_file(fname_tour, strip_node_num=False, header_length=0)
-    draw(tour, title="fname_tour")
+    # fname_tour = "results/nodes_shortest_51_438.48.txt"
+    # tour = parser.parse_file(fname_tour, strip_node_num=False, header_length=0)
+    # draw(tour, title="fname_tour")
 
     plt.show()
 
