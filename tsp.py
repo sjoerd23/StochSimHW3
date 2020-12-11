@@ -88,7 +88,6 @@ def p_boltzmann(nodes_tot_distance, nodes_cand_tot_distance, t):
         boltzmann_value : float
             value of the boltzmann distribution
     """
-    # print("%f",(nodes_cand_tot_distance - nodes_tot_distance))
     return np.exp(-(nodes_cand_tot_distance - nodes_tot_distance) / t)
 
 
@@ -224,15 +223,15 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
         #     progress_counter = 0
         # progress_counter += 1
 
-        # inner loop, over the Markov chain
+        # inner loop, ov    er the Markov chain
         for _ in range(markov_length):
 
             # generate candidate solution using 2-opt
             nodes_cand = two_opt(nodes.copy())
 
             # calculate objective function
-            nodes_tot_distance = tot_distance_sq(nodes)
-            nodes_cand_tot_distance = tot_distance_sq(nodes_cand)
+            nodes_tot_distance = tot_distance(nodes)
+            nodes_cand_tot_distance = tot_distance(nodes_cand)
 
             # y better than x, else x better than y
             if nodes_cand_tot_distance < nodes_tot_distance:
@@ -259,10 +258,13 @@ def main():
 
     fname_opt_tour = "data/eil51.opt.tour.txt"
     fname_tsp = "data/eil51.tsp.txt"
-    fname_opt_tour = "data/a280.opt.tour.txt"
-    fname_tsp = "data/a280.tsp.txt"
+    # fname_opt_tour = "data/a280.opt.tour.txt"
+    # fname_tsp = "data/a280.tsp.txt"
     # fname_opt_tour = "data/pcb442.opt.tour.txt"
     # fname_tsp = "data/pcb442.tsp.txt"
+
+    # nodes = parser.parse_file("/results/nodes_shortest_51_449.90.txt", strip_node_num=False, header_length=0)
+    # print(nodes)
 
     time_start = time.time()
 
@@ -277,11 +279,11 @@ def main():
 
     # specify parameters for SA
     markov_length = len(nodes)    # taken as len(nodes), can be adjusted to anything else
-    t_min = 4
-    t0 = 50
+    t_min = 2.2
+    t0 = 21
 
     # perform simulated annealing algorithm for a number of runs
-    n_runs = 30                           # number of runs of SA algorithm
+    n_runs = 10                           # number of runs of SA algorithm
     solns = []                       # list of final solution per run
     for i in tqdm.tqdm(range(n_runs)):
 
@@ -301,7 +303,7 @@ def main():
     # node number has to be parsed to be able to save
     if len(solns[0][0]) == 3:
         np.savetxt("results/nodes_shortest_{}_{:.2f}.txt".format(len(nodes_shortest), shortest_distance),
-            nodes_shortest[:,0], delimiter="\n", fmt="%i")
+            nodes_shortest, fmt="%i")
 
     # calculate statistics
     mean_distance = np.mean(distances)

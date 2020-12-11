@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 
 
-def parse_file(fname, strip_node_num=False):
+def parse_file(fname, strip_node_num=False, header_length=6):
     """Parse input file of TSP problem (tsp.txt) to array of node coordinates
 
     Args:
@@ -10,6 +10,8 @@ def parse_file(fname, strip_node_num=False):
             file name of data file
         no_node_num : boolean
             removes node number from data, returns only the coordinate per node
+        header_length : int (default: 6)
+            length of the header of the data file. Set to 0 if loading a generated solution
 
     Returns:
         data : np array of lists ([#NODE, x, y] if strip_node_num=False, else [x, y])
@@ -18,8 +20,8 @@ def parse_file(fname, strip_node_num=False):
     data = []
     with open(fname) as f:
 
-        # read through file and strip first 6 header lines
-        for line in itertools.islice(f, 6, None):
+        # read through file and strip first header_length lines
+        for line in itertools.islice(f, header_length, None):
 
             # if EOF reached, stop reading input
             if line.strip("\n") == "EOF":
