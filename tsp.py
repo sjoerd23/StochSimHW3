@@ -29,7 +29,8 @@ def two_opt(nodes):
     if i <= j:
         nodes[i:j] = np.flipud(nodes[i:j])
     else:
-        nodes[j:i] = np.flipud(nodes[j:i])
+        nodes = np.concatenate((nodes[j:i+1], np.flipud(nodes[0:j]),
+            np.flipud(nodes[i+1:len(nodes)])))
 
     return nodes
 
@@ -104,7 +105,7 @@ def tot_distance_sq(nodes):
         total_sq : float
             total squared distance between route in nodes
     """
-    total_sq = 0
+    total_sq = (nodes[-1][-2]-nodes[0][-2])**2 + (nodes[-1][-1]-nodes[0][-1])**2
     for i in range(len(nodes)-1):
         total_sq += (nodes[i][-2]-nodes[i+1][-2])**2 + (nodes[i][-1]-nodes[i+1][-1])**2
 
@@ -123,7 +124,7 @@ def tot_distance(nodes):
         total : float
             total distance between route in nodes
     """
-    total = 0
+    total = np.sqrt((nodes[-1][-2]-nodes[0][-2])**2 + (nodes[-1][-1]-nodes[0][-1])**2)
     for i in range(len(nodes)-1):
         total += np.sqrt((nodes[i][-2]-nodes[i+1][-2])**2 + (nodes[i][-1]-nodes[i+1][-1])**2)
 
@@ -169,18 +170,35 @@ def t_over_quadr(curr_iter, t0):
 def t_trigonometric(curr_iter, t0, tn, n):
     return tn + 0.5*(t0 - tn)*(1+np.cos((curr_iter*np.pi)/n))
 
-def draw(fname, ticks = True):
-	tour = parser.parse_file("results/" + fname, strip_node_num=False, header_length=0)
 
-	plt.figure()
-	x = [i[1] for i in tour]
-	y = [i[2] for i in tour]
-	x.append(x[0])
-	y.append(y[0])
-	plt.plot(x, y)
-	if not ticks:
-		plt.xticks([])
-		plt.yticks([])
+def draw(nodes, title = "", ticks = True):
+    """Draw the route given by notes
+
+    Args:
+        nodes : np array
+             array of x and y coords of solution
+        title : string
+            title of plot
+        ticks : boolean
+            show ticks of axis of plot
+
+    Returns:
+
+    """
+    plt.figure()
+    if title:
+        plt.title(title)
+    x = [i[-2] for i in nodes]
+    y = [i[-1] for i in nodes]
+    x.append(x[0])
+    y.append(y[0])
+    plt.plot(x, y, color='blue', zorder=2)
+    plt.scatter(x, y, color='red', zorder=1)
+    if not ticks:
+        plt.xticks([])
+        plt.yticks([])
+
+    return
 
 
 def calc_dist_opt_tour(fname_opt_tour, fname_tsp):
@@ -267,18 +285,14 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
     return nodes
 
 
-
 def main():
 
-    # fname_opt_tour = "data/eil51.opt.tour.txt"
-    # fname_tsp = "data/eil51.tsp.txt"
-    fname_opt_tour = "data/a280.opt.tour.txt"
-    fname_tsp = "data/a280.tsp.txt"
+    fname_opt_tour = "data/eil51.opt.tour.txt"
+    fname_tsp = "data/eil51.tsp.txt"
+    # fname_opt_tour = "data/a280.opt.tour.txt"
+    # fname_tsp = "data/a280.tsp.txt"
     # fname_opt_tour = "data/pcb442.opt.tour.txt"
     # fname_tsp = "data/pcb442.tsp.txt"
-
-    # nodes = parser.parse_file("/results/nodes_shortest_51_449.90.txt", strip_node_num=False, header_length=0)
-    # print(nodes)
 
     time_start = time.time()
 
@@ -316,8 +330,16 @@ def main():
 
     # node number has to be parsed to be able to save
     if len(solns[0][0]) == 3:
-        np.savetxt("results/nodes_shortest_{}_{:.2f}.txt".format(len(nodes_shortest), shortest_distance),
-            nodes_shortest, fmt="%i")
+        fname_nodes_shortest = "results/nodes_shortest_{}_{:.2f}.txt".format(len(nodes_shortest), shortest_distance)
+        np.savetxt(fname_nodes_shortest, nodes_shortest, fmt="%i")
+
+        # draw shortes calculated route
+        draw(nodes_shortest, title="Calculated shortest route")
+
+        # draw shortest given route
+        draw(parser.get_coords_opt_tour(fname_opt_tour, fname_tsp, strip_node_num=False),
+            title="Given shortest route")
+
 
     # calculate statistics
     mean_distance = np.mean(distances)
@@ -331,10 +353,13 @@ def main():
 
     print("Elapsed time: {:.2f}s".format(time.time() -time_start))
 
-    # draw solution
-    # draw("nodes_shortest_280_2759.16.txt")
+    # draw specified node solution
+    fname_tour = "results/nodes_shortest_51_438.48.txt"
+    tour = parser.parse_file(fname_tour, strip_node_num=False, header_length=0)
+    draw(tour, title="fname_tour")
 
     plt.show()
+
     return
 
 

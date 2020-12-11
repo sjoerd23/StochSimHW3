@@ -8,7 +8,7 @@ def parse_file(fname, strip_node_num=False, header_length=6):
     Args:
         fname : string
             file name of data file
-        no_node_num : boolean
+        strip_node_num : boolean
             removes node number from data, returns only the coordinate per node
         header_length : int (default: 6)
             length of the header of the data file. Set to 0 if loading a generated solution
@@ -73,7 +73,7 @@ def parse_sol_file(fname):
     return np.array(data)
 
 
-def get_coords_opt_tour(fname_opt_tour, fname_tsp):
+def get_coords_opt_tour(fname_opt_tour, fname_tsp, strip_node_num=False):
     """Get corresponding coordinates for optimal tour file (opt.tour.txt)
 
     Args:
@@ -81,6 +81,8 @@ def get_coords_opt_tour(fname_opt_tour, fname_tsp):
              file name of given optimal solution (opt.tour.txt)
         fname_tsp : string
              file name of given problem (tsp.txt)
+        strip_node_num : boolean
+            removes node number from data, returns only the coordinate per node
 
     Returns:
         coords_opt_tour : np array of [x, y] coordinates
@@ -93,6 +95,9 @@ def get_coords_opt_tour(fname_opt_tour, fname_tsp):
     for node_num in nodes_opt_tour:
         index = np.where(nodes_tsp[:,0] == node_num)[0][0]
 
-        coords_opt_tour.append(nodes_tsp[index][1:])
-
+        if strip_node_num:
+            coords_opt_tour.append(nodes_tsp[index][1:])
+        else:
+            coords_opt_tour.append(nodes_tsp[index][:])
+            
     return np.array(coords_opt_tour)
