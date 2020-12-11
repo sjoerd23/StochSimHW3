@@ -259,8 +259,8 @@ def main():
 
     fname_opt_tour = "data/eil51.opt.tour.txt"
     fname_tsp = "data/eil51.tsp.txt"
-    # fname_opt_tour = "data/a280.opt.tour.txt"
-    # fname_tsp = "data/a280.tsp.txt"
+    fname_opt_tour = "data/a280.opt.tour.txt"
+    fname_tsp = "data/a280.tsp.txt"
     # fname_opt_tour = "data/pcb442.opt.tour.txt"
     # fname_tsp = "data/pcb442.tsp.txt"
 
