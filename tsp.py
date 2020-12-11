@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import time
+import sys
 import tqdm
 import numba
 import parser
@@ -258,10 +259,10 @@ def main():
 
     fname_opt_tour = "data/eil51.opt.tour.txt"
     fname_tsp = "data/eil51.tsp.txt"
-    fname_opt_tour = "data/a280.opt.tour.txt"
-    fname_tsp = "data/a280.tsp.txt"
-    fname_opt_tour = "data/pcb442.opt.tour.txt"
-    fname_tsp = "data/pcb442.tsp.txt"
+    # fname_opt_tour = "data/a280.opt.tour.txt"
+    # fname_tsp = "data/a280.tsp.txt"
+    # fname_opt_tour = "data/pcb442.opt.tour.txt"
+    # fname_tsp = "data/pcb442.tsp.txt"
 
     time_start = time.time()
 
@@ -272,15 +273,15 @@ def main():
     optimal_distance = calc_dist_opt_tour(fname_opt_tour, fname_tsp)
 
     # parse tsp.txt input file to nodes
-    nodes = parser.parse_file(fname_tsp, strip_node_num=True)
+    nodes = parser.parse_file(fname_tsp, strip_node_num=False)
 
     # specify parameters for SA
-    markov_length = len(nodes)//2    # taken as len(nodes), can be adjusted to anything else (seems like small is benificial)
-    t_min = 4.4
+    markov_length = len(nodes)    # taken as len(nodes), can be adjusted to anything else
+    t_min = 4
     t0 = 50
-    
+
     # perform simulated annealing algorithm for a number of runs
-    n_runs = 10                            # number of runs of SA algorithm
+    n_runs = 30                           # number of runs of SA algorithm
     solns = []                       # list of final solution per run
     for i in tqdm.tqdm(range(n_runs)):
 
@@ -292,9 +293,17 @@ def main():
         sa = simulated_annealing(nodes, markov_length, t0, t_min)
         solns.append(sa)
 
-    # calculate statistics
+    # save best solution
     distances = [tot_distance(soln) for soln in solns]
     shortest_distance = np.min(distances)
+    nodes_shortest = solns[np.where(distances == shortest_distance)[0][0]]
+
+    # node number has to be parsed to be able to save
+    if len(solns[0][0]) == 3:
+        np.savetxt("results/nodes_shortest_{}_{:.2f}.txt".format(len(nodes_shortest), shortest_distance),
+            nodes_shortest[:,0], delimiter="\n", fmt="%i")
+
+    # calculate statistics
     mean_distance = np.mean(distances)
     sample_var_distance = np.std(distances, ddof=1)
     confidence_interval = (1.96*sample_var_distance / np.sqrt(len(solns)))

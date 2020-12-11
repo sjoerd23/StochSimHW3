@@ -55,7 +55,7 @@ def parse_sol_file(fname):
     data = []
     with open(fname) as f:
 
-        # read through file and strip first 6 header lines
+        # read through file and strip first 5 header lines
         for line in itertools.islice(f, 5, None):
 
             # if EOF reached, stop reading input
