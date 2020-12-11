@@ -169,6 +169,19 @@ def t_over_quadr(curr_iter, t0):
 def t_trigonometric(curr_iter, t0, tn, n):
     return tn + 0.5*(t0 - tn)*(1+np.cos((curr_iter*np.pi)/n))
 
+def draw(fname, ticks = True):
+	tour = parser.parse_file("results/" + fname, strip_node_num=False, header_length=0)
+
+	plt.figure()
+	x = [i[1] for i in tour]
+	y = [i[2] for i in tour]
+	x.append(x[0])
+	y.append(y[0])
+	plt.plot(x, y)
+	if not ticks:
+		plt.xticks([])
+		plt.yticks([])
+
 
 def calc_dist_opt_tour(fname_opt_tour, fname_tsp):
     """Calculates distance of given optimal tour file (opt.tour.txt)
@@ -254,12 +267,13 @@ def simulated_annealing(nodes, markov_length, t0, t_min):
     return nodes
 
 
+
 def main():
 
-    fname_opt_tour = "data/eil51.opt.tour.txt"
-    fname_tsp = "data/eil51.tsp.txt"
-    # fname_opt_tour = "data/a280.opt.tour.txt"
-    # fname_tsp = "data/a280.tsp.txt"
+    # fname_opt_tour = "data/eil51.opt.tour.txt"
+    # fname_tsp = "data/eil51.tsp.txt"
+    fname_opt_tour = "data/a280.opt.tour.txt"
+    fname_tsp = "data/a280.tsp.txt"
     # fname_opt_tour = "data/pcb442.opt.tour.txt"
     # fname_tsp = "data/pcb442.tsp.txt"
 
@@ -317,6 +331,10 @@ def main():
 
     print("Elapsed time: {:.2f}s".format(time.time() -time_start))
 
+    # draw solution
+    # draw("nodes_shortest_280_2759.16.txt")
+
+    plt.show()
     return
 
 
