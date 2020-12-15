@@ -3,8 +3,10 @@ import matplotlib.pyplot as plt
 import copy
 import time
 import tqdm
+import sys
 import numba
 import parser
+import genetic
 
 
 @numba.njit
@@ -254,7 +256,7 @@ def simulated_annealing(nodes, markov_length, t0):
 
         # if program takes too long: return
         # this terminating value can be set higher if you want your programs to run longer
-        if curr_iter > 1e6:
+        if curr_iter > 1e5:
             print("While loop takes too long. Maybe adjust eps; return")
             return nodes
 
@@ -292,8 +294,35 @@ def simulated_annealing(nodes, markov_length, t0):
 
         curr_iter += 1
 
-    print("Stopping condition met: curr_iter:", curr_iter)
+    # print("Stopping condition met: curr_iter:", curr_iter)
     return nodes
+
+
+def genetic_parameters(fname_tsp):
+
+    # create random initial solution
+    nodes = parser.parse_file(fname_tsp, strip_node_num=False)
+    np.random.shuffle(nodes)
+    # initial_distance = tot_distance(nodes)
+
+    markov_length = len(nodes)
+    markov_low = 2
+    markov_high = 12    #15
+    t0_low = 3
+    t0_high = 15
+    pop_size = 30       # 40
+    n_generations = 20   # 20
+    n_runs = 2
+    offspring_multiplier = 3
+
+    pop = genetic.run_genetic(
+        nodes, pop_size, n_generations, n_runs, offspring_multiplier, t0_low, t0_high,
+        markov_length, markov_low, markov_high
+    )
+    print(pop)
+    print("t0: {:.2f}, markov_multiplier: {:.2f}, distance: {:.2f}".format(pop[0][0], pop[0][1]/markov_length, pop[0][2]))
+
+    return [pop[0][0], pop[0][1]/markov_length]
 
 
 def main():
@@ -310,6 +339,10 @@ def main():
     # set seed for np.random module
     np.random.seed()
 
+    # perform genetic algorithm to determine best coefficients
+    t0, markov_multiplier = genetic_parameters(fname_tsp="data/eil51.tsp.txt")
+    # t0, markov_multiplier = 7.05, 8.03
+
     # calculate distance for given best solution (opt.tour.txt files)
     optimal_distance = calc_dist_opt_tour(fname_opt_tour, fname_tsp)
 
@@ -317,11 +350,12 @@ def main():
     nodes = parser.parse_file(fname_tsp, strip_node_num=False)
 
     # specify parameters for SA
-    markov_length = len(nodes)    # taken as len(nodes), can be adjusted to anything else
-    t0 = 5
+    # markov_multiplier = 2
+    markov_length = len(nodes)*markov_multiplier
+    t0 = t0
 
     # perform simulated annealing algorithm for a number of runs
-    n_runs = 15                         # number of runs of SA algorithm
+    n_runs = 30                         # number of runs of SA algorithm
     solns = []                       # list of final solution per run
     for i in tqdm.tqdm(range(n_runs)):
 
