@@ -299,6 +299,18 @@ def simulated_annealing(nodes, markov_length, t0):
 
 
 def genetic_parameters(fname_tsp):
+    """Genetic algorithm for parameter estimation of t0 and markov_multiplier
+
+    Args:
+        fname_tsp : string
+             file name of given problem (tsp.txt)
+
+    Returns:
+        t0 : float
+            t0 for cooling schedule
+        markov_multiplier : float
+            multiplier used as follows: markov_length = markov_multiplier * len(nodes)
+    """
 
     # create random initial solution
     nodes = parser.parse_file(fname_tsp, strip_node_num=False)
