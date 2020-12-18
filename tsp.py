@@ -4,7 +4,6 @@ import pandas as pd
 import copy
 import time
 import tqdm
-import sys
 import numba
 import parser
 
@@ -327,12 +326,12 @@ def main():
     convergence(nodes, markov_length_l, t0_l, n_runs, cooling_l)
 
     # specify parameters for SA
-    # t0, markov_multiplier, cooling = 11, 50, "LOG"
-    t0, markov_multiplier, cooling = 40, 50, "LINEAR"
+    t0, markov_multiplier, cooling = 11, 50, "LOG"
+    # t0, markov_multiplier, cooling = 40, 50, "LINEAR"
     # t0, markov_multiplier, cooling = 50, 40, "QUAD"
-    # t0, markov_multiplier, cooling = 4, 1, "LOG"
+
     markov_length = len(nodes)*markov_multiplier
-    n_runs = 5                        # number of runs of SA algorithm
+    n_runs = 100                     # number of runs of SA algorithm
     solns = []                       # list of final solutions per run
 
     print("Cooling, t0, markov_multiplier: ({}, {}, {})".format(cooling, t0, markov_multiplier))
