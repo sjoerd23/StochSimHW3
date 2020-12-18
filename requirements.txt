@@ -1,4 +1,6 @@
-numpy==1.18.5
-tqdm==4.47.0
+pandas==1.0.5
 matplotlib==3.2.2
 numba==0.50.1
+tqdm==4.47.0
+numpy==1.18.5
+genetic==0.1.dev3
