@@ -1,3 +1,7 @@
+# tsp.py
+# Main file. Execute this file to perform the SA for the TSP problem.
+# In the main() function all adjustable parameters are visible.
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd

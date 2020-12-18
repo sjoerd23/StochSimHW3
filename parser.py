@@ -1,3 +1,6 @@
+# parser.py
+# Helper file (not executable). Parses input files to be used in tsp.py
+
 import numpy as np
 import itertools
 
