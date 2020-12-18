@@ -100,7 +100,7 @@ def get_coords_opt_tour(fname_opt_tour, fname_tsp, strip_node_num=False):
 
     coords_opt_tour = []
     for node_num in nodes_opt_tour:
-        index = np.where(nodes_tsp[:,0] == node_num)[0][0]
+        index = np.where(nodes_tsp[:, 0] == node_num)[0][0]
 
         if strip_node_num:
             coords_opt_tour.append(nodes_tsp[index][1:])

@@ -79,7 +79,7 @@ def convergence(nodes, markov_length_l, t0_l, n_runs, cooling_l):
     return data_df
 
 
-def draw(nodes, title = "", ticks = True):
+def draw(nodes, title="", ticks=True):
     """Draw the route given by notes
 
     Args:
@@ -150,9 +150,9 @@ def simulated_annealing(nodes, markov_length, t0, cooling="LOG"):
     best_distance = tot_distance(nodes)
     best_nodes = nodes.copy()
 
-    improv_iter = 0       # counter tracking the amount of iterations before an improvement is made
-    improv_limit = 1000   # after this amount of iterations a better solution has to be found, else return
-    max_iter = 1e5        # maximum amount of iterations before returning
+    improv_iter = 0      # counter tracking the amount of iterations before an improvement is made
+    improv_limit = 1000  # after amount of iterations a better solution has to be found, else return
+    max_iter = 1e5       # maximum amount of iterations before returning
 
     # if program takes too long: return
     # this terminating value max_iter can be set higher if you want your programs to run longer
@@ -241,7 +241,7 @@ def t_log(curr_iter, t0):
 
 
 @numba.njit
-def t_over_linear(curr_iter,t0):
+def t_over_linear(curr_iter, t0):
     """Cooling schedule with 1 over linear
 
     Args:
@@ -324,7 +324,7 @@ def main():
 
     # calculate convergence
     markov_length_l = [len(nodes) * i for i in range(1, 4)]
-    t0_l = [4,5]
+    t0_l = [4, 5]
     n_runs = 5
     cooling_l = ["LOG", "LINEAR", "QUAD"]
     convergence(nodes, markov_length_l, t0_l, n_runs, cooling_l)
@@ -378,7 +378,7 @@ def main():
     print("Average found distance: {:.2f} +- {:.2f}".format(mean_distance, confidence_interval))
     print("Minimum found distance: {:.2f}".format(shortest_distance))
 
-    print("Elapsed time: {:.2f}s".format(time.time() -time_start))
+    print("Elapsed time: {:.2f}s".format(time.time() - time_start))
 
     plt.show()
 
